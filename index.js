@@ -10,9 +10,13 @@ const ejsMate= require("ejs-mate");
 const ExpressError=require("./utils/ExpressError.js");
 const session=require('express-session');
 const flash= require('connect-flash');
+const passport=require("passport");
+const LocalStrategy=require("passport-local");
+const User=require("./models/users.js");
 
-const listings=require("./routes/listings.js");
-const reviews=require("./routes/reviews.js");
+const listingsRouter=require("./routes/listings.js");
+const reviewsRouter=require("./routes/reviews.js");
+const userRouter=require("./routes/user.js");
 
 app.set("view engine","ejs");
 app.set("views",path.join(__dirname,"views"));
@@ -46,20 +50,47 @@ app.listen(port,()=>{
     console.log("server is listening to port 8080");
 })
 
-app.get("/",(req,res)=>{
-    res.render("listings/home.ejs");
-})
+// app.get("/",(req,res)=>{
+//     // res.render("listings/home.ejs");
+//     res.send("Hi , I am root");
+// })
 
 app.use(session(sessionOptions));
 app.use(flash());
 
+app.use(passport.initialize());
+app.use(passport.session());
+
+// use static authenticate method of model in LocalStrategy
+passport.use(new LocalStrategy(User.authenticate()));
+
+// use static serialize and deserialize of model for passport session support
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
+
 app.use((req,res,next)=>{
     res.locals.success=req.flash("success");
     res.locals.failure=req.flash("failure");
-    console.log(res.locals.success);
-    console.log(res.locals.failure);
+    // console.log(res.locals.success);
+    // console.log(res.locals.failure);
+    res.locals.currUser = req.user;
     next();
 })
+
+
+
+// app.get("/demouser", async(req,res)=>{
+//     let fakeUser=new User({
+//         email:"xyz@gamil.com",
+//         username:"delta",
+//     });
+
+//     ///username should be unique
+//     let registeredUser=await User.register(fakeUser,"helloPassword");///info and password are sent.
+//     res.send(registeredUser);
+// });
+
+
 
 // app.get("/testListing",(req,res)=>{
 //     let sampleListing= new Listing ({
@@ -80,10 +111,13 @@ app.use((req,res,next)=>{
 
 
 ////   LISTINGS   ////
-app.use("/listings",listings);
+app.use("/listings",listingsRouter);
 
 ////   REVIEWS   ////
-app.use("/listings/:id/reviews",reviews);
+app.use("/listings/:id/reviews",reviewsRouter);
+
+////   USER   ////
+app.use("/",userRouter);
 
 
 app.all("*",(req,res,next)=>{

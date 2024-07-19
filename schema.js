@@ -15,6 +15,5 @@ module.exports.reviewSchema=Joi.object({
     review:Joi.object({
         rating:Joi.number().required().min(1).max(5),
         comment:Joi.string().required(),
-        username:Joi.string().required().pattern(/^[a-zA-Z\s]+$/, 'alphabetic characters').min(2).min(3)
     }).required(),
 })
