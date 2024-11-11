@@ -4,6 +4,9 @@ const Listing=require("../models/listings.js");
 const wrapAsync=require("../utils/wrapAsync.js");
 const {isLoggedIn,isOwner,validateListing}=require("../middleware.js");
 const listingcontroller = require("../controllers/listings.js");
+const multer=require("multer");
+const {storage}=require("../cloudConfig.js");
+const upload=multer({storage});
 
 /////Router.routes:
 
@@ -11,7 +14,8 @@ router.route("/")
 .get(wrapAsync(listingcontroller.index))/// no need to define path.
 .post(
   isLoggedIn,
-  validateListing/*(middleware)*/,
+  // validateListing/*(middleware)*/,
+  upload.single("listing[image]"),
   wrapAsync(listingcontroller.createListing)
 )
 
@@ -28,7 +32,8 @@ router.route("/:id")
 .put(
   isLoggedIn,
   isOwner,
-  validateListing,
+  upload.single("listing[image]"),
+  // validateListing,
   wrapAsync(listingcontroller.updateListing)
 )
 .delete(

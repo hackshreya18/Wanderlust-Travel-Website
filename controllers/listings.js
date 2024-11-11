@@ -27,7 +27,7 @@ module.exports.showListing = async(req,res)=>{
     })
     .populate("owner");
 
-    console.log(list);
+    // console.log(list);
     if(!list){
       req.flash("failure","Such listing does not exists");
       res.redirect("/listings");
@@ -37,9 +37,13 @@ module.exports.showListing = async(req,res)=>{
 
 //Create
 module.exports.createListing =async(req,res,next)=>{ 
+    let url= req.file.path;
+    let filename = req.file.filename;
+    // console.log(url ," ", filename);
     // if(!req.body.listing){
     //     throw new ExpressError(400,"Send Valid data for Listing");
     // }   
+
     const newListing= new Listing(req.body.listing);
     // if(!newListing.title){
     //     throw new ExpressError(400,"Title is missing!");
@@ -52,7 +56,9 @@ module.exports.createListing =async(req,res,next)=>{
     // }  
     console.log(req.user);
     newListing.owner=req.user._id;
+    newListing.image={url,filename};
     await newListing.save();
+
     req.flash("success","New Listing Created!");
     res.redirect("/listings");   
 }
@@ -68,7 +74,9 @@ module.exports.renderEditForm =async(req,res)=>{
       req.flash("failure","Such listing does not exists");
       res.redirect("/listings");
     }
-    res.render("listings/edit.ejs",{list});
+    let originalImg=list.image.url;
+    originalImg=originalImg.replace("/upload","/upload/w_300")
+    res.render("listings/edit.ejs",{list,originalImg});
 }
 
 //Update 
@@ -80,15 +88,26 @@ module.exports.updateListing =async(req,res)=>{
     // }
 
     ////for authorization
-    let listing= await Listing.findById(id);
+    // let listing= await Listing.findById(id);
     // if(!listing.owner._id.equals(res.locals.currUser._id)){
     //   req.flash("failure","You don't have permission to edit");
     //   return res.redirect(`/listings/${id}`);
     // }
     /////Till above here(for authorization)
+   
+    let listing=await Listing.findByIdAndUpdate(id,{...req.body.listing});// We have insert deconstructed values.
 
-    await Listing.findByIdAndUpdate(id,{...req.body.listing});// We have insert deconstructed values.
-    // console.log(listing);
+    // console.log(req.file);
+    if(typeof req.file !== "undefined"){
+      let url= req.file.path;
+      let filename = req.file.filename;
+      listing.image={url,filename};
+
+      await listing.save();
+    }
+    
+
+
     req.flash("success","Listing Updated!");
     res.redirect(`/listings/${id}`);
 }

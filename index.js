@@ -1,3 +1,8 @@
+if(process.env.NODE_ENV !="production"){
+    require("dotenv").config();
+}
+// console.log(process.env.SECRET);
+
 const express=require("express");
 const app=express();
 const port=8080;
@@ -14,6 +19,7 @@ const passport=require("passport");
 const LocalStrategy=require("passport-local");
 const User=require("./models/users.js");
 
+
 const listingsRouter=require("./routes/listings.js");
 const reviewsRouter=require("./routes/reviews.js");
 const userRouter=require("./routes/user.js");
@@ -27,7 +33,7 @@ app.use(methodOverride('_method'));
 app.engine('ejs', ejsMate);
 
 const sessionOptions={
-    secret:"mysecret",
+    secret:process.env.SECRET,
     resave:false,
     saveUninitialized:true,
     cookie:{
